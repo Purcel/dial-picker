@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="DialPicker">
+        <attr name="gradientTopBottomColor" format="color"/>
+        <attr name="gradientMiddleColor" format="color"/>
+        <attr name="gradientViewWindows" format="float"/>
+        <attr name="dialTextColor" format="color"/>
+        <attr name="dialTextSize" format="dimension"/>
+        <attr name="dialTextLeading" format="dimension"/>
+        <attr name="description" format="string"/>
+        <attr name="descriptionTextSize" format="dimension"/>
+        <attr name="descriptionStartPadding" format="dimension"/>
+        <attr name="shadowDx" format="float"/>
+        <attr name="shadowDy" format="float"/>
+    </declare-styleable>
+</resources>
