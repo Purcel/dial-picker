@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * copyright 2023, Purcel Iulian
+ */
+
 package com.iulu.dialpicker
 
 import android.annotation.SuppressLint
@@ -100,7 +108,7 @@ class DialPicker @JvmOverloads constructor(
         dialTextLeading - dialTextHeight
     }
     private val dialPickerTop: Float by lazy {
-         dialPickerYCenter - dialPickerHeight/2f
+        dialPickerYCenter - dialPickerHeight/2f
     }
     private val dialPickerBottom: Float by lazy {
         dialPickerYCenter + dialPickerHeight/2f
@@ -347,9 +355,11 @@ class DialPicker @JvmOverloads constructor(
             MeasureSpec.AT_MOST -> {
                 width = paddingStart + dialTextLength + descriptionStartPadding + descriptionWidth + paddingEnd
             }
+
             MeasureSpec.EXACTLY -> {
                 width = widthSize
             }
+
             MeasureSpec.UNSPECIFIED -> {
                 width = paddingStart + dialTextLength + descriptionStartPadding + descriptionWidth + paddingEnd
             }
@@ -359,9 +369,11 @@ class DialPicker @JvmOverloads constructor(
             MeasureSpec.AT_MOST -> {
                 height = dialPickerHeight.toInt() + paddingTop + paddingBottom
             }
+
             MeasureSpec.EXACTLY -> {
                 height = heightSize
             }
+
             MeasureSpec.UNSPECIFIED -> {
                 height = dialPickerHeight.toInt() + paddingTop + paddingBottom
             }
@@ -396,6 +408,7 @@ class DialPicker @JvmOverloads constructor(
                 fingerDownY = event.y
                 invalidate()
             }
+
             MotionEvent.ACTION_MOVE -> {
                 dY = my
                 my = (event.y - fingerDownY) + fingerUpY
@@ -410,6 +423,7 @@ class DialPicker @JvmOverloads constructor(
 
                 invalidate()
             }
+
             MotionEvent.ACTION_UP -> {
                 fingerUpY = my
                 velocityTracker.addMovement(event)
@@ -439,7 +453,7 @@ class DialPicker @JvmOverloads constructor(
                 mState = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
                     getParcelable("superState")
                 else
-                   getParcelable("superState", Parcelable::class.java)
+                    getParcelable("superState", Parcelable::class.java)
             }
         }
         super.onRestoreInstanceState(mState)
