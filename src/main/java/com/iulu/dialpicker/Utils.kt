@@ -8,6 +8,10 @@
 
 package com.iulu.dialpicker
 
+import android.content.res.Resources
+import android.graphics.Paint
+import android.graphics.Rect
+import android.util.TypedValue
 import kotlin.math.abs
 
 fun <T> Array<T>.rotate(by: Int) {
@@ -32,7 +36,9 @@ fun <T> Array<T>.rotate(by: Int) {
 
 class RollerType(private val max: Int) {
     var value: Int = 0
-        set(value) { field = roller(value) }
+        set(value) {
+            field = roller(value)
+        }
 
     fun valueWithOffset(offSet: Int): Int = roller(value + offSet)
     private fun roller(value: Int): Int = when {
@@ -54,3 +60,21 @@ fun Array<Int>.circularAdd(value: Int, max: UInt) {
     }
 }
 
+fun Collection<String>.getTrueWidestString(rect: Rect, paint: Paint): String {
+    var result = ""
+    var widest = 0
+    for (s in this) {
+        paint.getTextBounds(s, 0, s.length, rect)
+        val width = rect.width()
+        if (width > widest) {
+            widest = width
+            result = s
+        }
+    }
+    return result
+}
+
+val Number.toPx get() = TypedValue.applyDimension(
+    TypedValue.COMPLEX_UNIT_DIP,
+    this.toFloat(),
+    Resources.getSystem().displayMetrics)

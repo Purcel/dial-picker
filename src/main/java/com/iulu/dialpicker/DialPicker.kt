@@ -23,6 +23,7 @@ import androidx.dynamicanimation.animation.FloatValueHolder
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
 import com.google.android.material.color.MaterialColors
+import kotlin.math.abs
 
 class DialPicker @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -37,31 +38,46 @@ class DialPicker @JvmOverloads constructor(
     private var descriptionStartPadding = 0
     private var shadowDx = 0f
     private var shadowDy = 0f
+
+    private var dialMagnetDampingRatio: Float = 0f
+    private var dialMagnetStiffness: Float = 0f
+    private var dialMagnetEngageSpeed: Float = 0f
+    private var dialFriction: Float = 0f
+
     private var gradientViewWindow: Float = 0f
-        get() = (dialPickerHeight/2f)*field
+        get() = (dialPickerHeight / 2f) * field
     private var description = ""
 
     init {
-        val backgroundColor = MaterialColors.getColor(context, android.R.attr.windowBackground, Color.WHITE)
-        val foregroundColor = MaterialColors.getColor(context, android.R.attr.colorForeground, Color.GREEN)
+        val backgroundColor =
+            MaterialColors.getColor(context, android.R.attr.windowBackground, Color.WHITE)
+        val foregroundColor =
+            MaterialColors.getColor(context, android.R.attr.colorForeground, Color.BLACK)
 
         val ta = context.obtainStyledAttributes(attrs, R.styleable.DialPicker, 0, 0)
-        gradientTopBottomColor = ta.getColor(R.styleable.DialPicker_gradientTopBottomColor, backgroundColor)
-        gradientMiddleColor = ta.getColor(R.styleable.DialPicker_gradientMiddleColor, Color.TRANSPARENT)
+        gradientTopBottomColor =
+            ta.getColor(R.styleable.DialPicker_gradientTopBottomColor, backgroundColor)
+        gradientMiddleColor =
+            ta.getColor(R.styleable.DialPicker_gradientMiddleColor, Color.TRANSPARENT)
         gradientViewWindow = ta.getFloat(R.styleable.DialPicker_gradientViewWindows, .9f)
         dialTextColor = ta.getColor(R.styleable.DialPicker_dialTextColor, foregroundColor)
-        dialTextSize = ta.getDimension(R.styleable.DialPicker_dialTextSize, 100f)
-        dialTextLeading = ta.getDimension(R.styleable.DialPicker_dialTextLeading, 200f)
+        dialTextSize = ta.getDimension(R.styleable.DialPicker_dialTextSize, 30f.toPx)
+        dialTextLeading = ta.getDimension(R.styleable.DialPicker_dialTextLeading, 70f.toPx)
         description = ta.getText(R.styleable.DialPicker_description)?.toString() ?: "Min"
-        descriptionTextSize = ta.getDimension(R.styleable.DialPicker_descriptionTextSize, 60f)
-        descriptionStartPadding = ta.getDimensionPixelSize(R.styleable.DialPicker_descriptionStartPadding, 20)
+        descriptionTextSize = ta.getDimension(R.styleable.DialPicker_descriptionTextSize, 20f.toPx)
+        descriptionStartPadding =
+            ta.getDimensionPixelSize(R.styleable.DialPicker_descriptionStartPadding, 10.toPx.toInt())
         shadowDx = ta.getFloat(R.styleable.DialPicker_shadowDx, 1f)
         shadowDy = ta.getFloat(R.styleable.DialPicker_shadowDy, 2f)
+        dialMagnetDampingRatio = ta.getFloat(R.styleable.DialPicker_dialMagnetDampingRatio, 0.8f)
+        dialMagnetStiffness = ta.getFloat(R.styleable.DialPicker_dialMagnetStiffness, 80f)
+        dialMagnetEngageSpeed = ta.getFloat(R.styleable.DialPicker_dialMagnetEngageSpeed, 1000f)
+        dialFriction = ta.getFloat(R.styleable.DialPicker_dialFriction, 1f)
         ta.recycle()
     }
 
     /**
-     * List of elements for the dial
+     * List of elements.
      * */
     var list: ArrayList<String> = arrayListOf("01", "02", "03", "04", "05")
         set(value) {
@@ -75,7 +91,7 @@ class DialPicker @JvmOverloads constructor(
     }
 
     /**
-     * Position of the dial (return the list index)
+     * Position of the dial (Return the list index).
      * */
     var position: Int
         set(value) {
@@ -87,7 +103,7 @@ class DialPicker @JvmOverloads constructor(
     private var onClickListener: OnClickListener? = null
 
     /**
-     * Set onPositionChange listener
+     * Set onPositionChange listener.
      * @param listener Listener
      * */
     fun setOnSnapListener(listener: (element: String) -> Unit) {
@@ -108,10 +124,10 @@ class DialPicker @JvmOverloads constructor(
         dialTextLeading - dialTextHeight
     }
     private val dialPickerTop: Float by lazy {
-        dialPickerYCenter - dialPickerHeight/2f
+        dialPickerYCenter - dialPickerHeight / 2f
     }
     private val dialPickerBottom: Float by lazy {
-        dialPickerYCenter + dialPickerHeight/2f
+        dialPickerYCenter + dialPickerHeight / 2f
     }
     private val dialPickerHeight: Float = posArray[posArray.size - 1]
     private var dialTextLength = 0
@@ -164,9 +180,8 @@ class DialPicker @JvmOverloads constructor(
 
     private val magnetValueHolder = FloatValueHolder()
     private val magnetForce = SpringForce().apply {
-        dampingRatio = DAMPING_RATIO
-        finalPosition = MAGNET_FORCE_FINAL_POSITION
-        stiffness = STIFFNESS
+        dampingRatio = dialMagnetDampingRatio
+        stiffness = dialMagnetStiffness
     }
 
     private var fingerUpY = 0f
@@ -185,9 +200,9 @@ class DialPicker @JvmOverloads constructor(
 
     private val flingValueHolder = FloatValueHolder()
     private val flingAnimation = FlingAnimation(flingValueHolder).apply {
-        friction = FRICTION
+        friction = dialFriction
         addUpdateListener { _, value, velocity ->
-            if (velocity < ENGAGE_SPEED && velocity > -ENGAGE_SPEED) {
+            if (velocity < dialMagnetEngageSpeed && velocity > -dialMagnetEngageSpeed) {
                 cancel()
                 magnet.setStartVelocity(velocity)
                 magnet.setStartValue(my)
@@ -208,24 +223,28 @@ class DialPicker @JvmOverloads constructor(
 
     private val roller = arrayOf(0, 1, 2, 3, 4)
 
-    private fun moveDialUp() {
-        posArray[0] += dialPickerHeight
-        posArray.rotate(1)
-        roller[0] = rawPositionCounter.valueWithOffset(5)
-        roller.rotate(1)
-        stickyPos -= dialTextLeading
-        rawPositionCounter.value++
-        centerPositionCounter.value++
+    private fun moveDialUp(times: Int) {
+        for (t in -1 until times) {
+            posArray[0] += dialPickerHeight
+            posArray.rotate(1)
+            roller[0] = rawPositionCounter.valueWithOffset(5)
+            roller.rotate(1)
+            stickyPos -= dialTextLeading
+            rawPositionCounter.value++
+            centerPositionCounter.value++
+        }
     }
 
-    private fun moveDialDown() {
-        centerPositionCounter.value--
-        rawPositionCounter.value--
-        posArray[posArray.size - 1] -= dialPickerHeight
-        posArray.rotate(-1)
-        roller[roller.size - 1] = rawPositionCounter.value
-        roller.rotate(-1)
-        stickyPos += dialTextLeading
+    private fun moveDialDown(times: Int) {
+        for (t in -1 until times) {
+            centerPositionCounter.value--
+            rawPositionCounter.value--
+            posArray[posArray.size - 1] -= dialPickerHeight
+            posArray.rotate(-1)
+            roller[roller.size - 1] = rawPositionCounter.value
+            roller.rotate(-1)
+            stickyPos += dialTextLeading
+        }
     }
 
     private val paintDialText: Paint by lazy {
@@ -307,15 +326,17 @@ class DialPicker @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas?) {
 
         val movingTop = my + posArray[0]
+        val timesUp = (abs(movingTop / dialTextLeading)).toInt()
         if (movingTop <= dialPickerTop) {
-            moveDialUp()
+            moveDialUp(timesUp)
             if (snappingState)
                 snap()
         }
 
         val movingBottom = my + posArray[posArray.size - 1]
+        val timesDown = (abs((movingBottom - dialPickerHeight) / dialTextLeading)).toInt()
         if (movingBottom >= dialPickerBottom) {
-            moveDialDown()
+            moveDialDown(timesDown)
             if (snappingState)
                 snap()
         }
@@ -329,10 +350,8 @@ class DialPicker @JvmOverloads constructor(
 
     private val textBounds = Rect()
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        paintDialText.getTextBounds(
-            list[ELEMENT_TO_PROBE], 0,
-            list[ELEMENT_TO_PROBE].length, textBounds
-        )
+        val longestDialElement: String = list.getTrueWidestString(textBounds, paintDialText)
+        paintDialText.getTextBounds(longestDialElement, 0, longestDialElement.length, textBounds)
         dialTextLength = textBounds.width()
         dialTextHeight = textBounds.height()
         dialTextExactCenterY = textBounds.exactCenterY()
@@ -353,7 +372,8 @@ class DialPicker @JvmOverloads constructor(
 
         when (widthMode) {
             MeasureSpec.AT_MOST -> {
-                width = paddingStart + dialTextLength + descriptionStartPadding + descriptionWidth + paddingEnd
+                width =
+                    paddingStart + dialTextLength + descriptionStartPadding + descriptionWidth + paddingEnd + 5 //Magic number! Yey! 🙌
             }
 
             MeasureSpec.EXACTLY -> {
@@ -361,7 +381,8 @@ class DialPicker @JvmOverloads constructor(
             }
 
             MeasureSpec.UNSPECIFIED -> {
-                width = paddingStart + dialTextLength + descriptionStartPadding + descriptionWidth + paddingEnd
+                width =
+                    paddingStart + dialTextLength + descriptionStartPadding + descriptionWidth + paddingEnd + 5 //Magic number! Yey! 🙌
             }
         }
 
@@ -390,14 +411,13 @@ class DialPicker @JvmOverloads constructor(
         roller.circularAdd(rawPositionCounter.value, list.size.toUInt())
 
         mx = paddingStart + dialTextLength / 2f
-        my = dialPickerTop - dialTextHeight/2f - dialTextSpace/2f
+        my = dialPickerTop - dialTextHeight / 2f - dialTextSpace / 2f
         stickyPos = dialPickerTop - dialTextLeading / 2f
         fingerUpY = my
     }
 
     private val velocityTracker = VelocityTracker.obtain()
     private var fingerDownY = 0f
-    private var dY = 0f
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
@@ -410,17 +430,8 @@ class DialPicker @JvmOverloads constructor(
             }
 
             MotionEvent.ACTION_MOVE -> {
-                dY = my
-                my = (event.y - fingerDownY) + fingerUpY
-
+                my = ((event.y - fingerDownY) + fingerUpY)
                 velocityTracker.addMovement(event)
-
-                //TODO if font size is 30sp or less the limitation is useless
-                if (dY - my > SCROLL_SPEED_LIMIT)
-                    my = dY - 80f
-                if (my - dY > SCROLL_SPEED_LIMIT)
-                    my = dY + 80f
-
                 invalidate()
             }
 
@@ -459,20 +470,3 @@ class DialPicker @JvmOverloads constructor(
         super.onRestoreInstanceState(mState)
     }
 }
-
-private const val DAMPING_RATIO = 0.8f
-private const val MAGNET_FORCE_FINAL_POSITION = 430f
-private const val STIFFNESS = 80f
-private const val ENGAGE_SPEED = 1000f
-private const val FRICTION = 1f
-private const val SCROLL_SPEED_LIMIT = 180f
-//Select the element of list to get text bounds from
-//NOTE: This is important if you have in list text of different sizes!
-private const val ELEMENT_TO_PROBE = 1
-
-/**
- * TODO Add x axis gravity center (right new gravity is Right on x)
- * TODO Fix dial and description text clipping issue when there is no horizontal padding
- *@author Iulu
- * */
-

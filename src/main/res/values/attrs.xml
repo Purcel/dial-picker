@@ -1,16 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="DialPicker">
+        <!-- Default is android.R.attr.windowBackground -->
         <attr name="gradientTopBottomColor" format="color"/>
+        <!-- Default is transparent -->
         <attr name="gradientMiddleColor" format="color"/>
+        <!-- Default is .9f | Min = 0.0f | Max = 1.0f -->
         <attr name="gradientViewWindows" format="float"/>
+        <!-- Default is android.R.attr.colorForeground -->
         <attr name="dialTextColor" format="color"/>
+        <!-- Default is 30dp -->
         <attr name="dialTextSize" format="dimension"/>
+        <!-- This is the distance between the Dial elements. Default value is 70f.-->
         <attr name="dialTextLeading" format="dimension"/>
+        <!-- This is the description of the Dial. -->
         <attr name="description" format="string"/>
+        <!-- Default is 20dp -->
         <attr name="descriptionTextSize" format="dimension"/>
+        <!-- Default is 10dp -->
         <attr name="descriptionStartPadding" format="dimension"/>
+        <!-- This dial and description shadow position on x axis. -->
         <attr name="shadowDx" format="float"/>
+        <!-- This dial and description shadow position on y axis. -->
         <attr name="shadowDy" format="float"/>
+        <!-- Default is .8f -->
+        <attr name="dialMagnetDampingRatio" format="float"/>
+        <!-- Default is .8f -->
+        <attr name="dialMagnetStiffness" format="float"/>
+        <!-- Default is .8f -->
+        <attr name="dialMagnetEngageSpeed" format="float"/>
+        <!-- Default is 1f -->
+        <attr name="dialFriction" format="float"/>
     </declare-styleable>
 </resources>
