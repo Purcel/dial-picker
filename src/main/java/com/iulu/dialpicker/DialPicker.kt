@@ -323,7 +323,7 @@ class DialPicker @JvmOverloads constructor(
         )
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
 
         val movingTop = my + posArray[0]
         val timesUp = (abs(movingTop / dialTextLeading)).toInt()
